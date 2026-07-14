@@ -7,7 +7,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "dev:functions": "wrangler pages dev --proxy 4321 --env-file=.env --compatibility-date=2025-04-01",
+    "dev:functions": "wrangler pages dev --proxy 4321 --env-file=.env --compatibility-date=2026-07-14",
     "astro": "astro",
     "typecheck": "astro check",
     "seed": "tsx --env-file=.env scripts/seed.ts",

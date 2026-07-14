@@ -62,7 +62,7 @@ export async function uploadProductImage(
   );
   const uploaded = (await uploadResponse.json()) as CloudinaryUploadResponse;
   if (!uploadResponse.ok || !uploaded.public_id || !uploaded.secure_url) {
-    throw new Error(uploaded.error?.message || "No se pudo subir la imagen.");
+    throw new Error(uploaded.error?.message || `No se pudo subir la imagen (HTTP ${uploadResponse.status}).`);
   }
 
   return {

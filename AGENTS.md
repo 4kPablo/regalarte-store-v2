@@ -17,6 +17,24 @@ This project is an editable product catalog intended to become a reusable, sella
 ## Key Commands
 *   **Install Dependencies:** `pnpm install`
 *   **Start Development Server:** `pnpm run dev` (Runs on `localhost:4321`)
+*   **Start Cloudflare Pages Functions:** `pnpm run dev:functions` (Runs on `localhost:8788`, proxies Astro on `:4321`)
+
+## Local Development
+
+The admin panel uses Cloudflare Pages Functions for API endpoints (`/api/images/sign`, `/api/images/delete`, `/api/publish`).
+Astro's dev server does **not** serve these — you must run wrangler alongside it.
+
+**Terminal 1** — Astro with hot reload:
+```
+pnpm run dev
+```
+
+**Terminal 2** — Cloudflare Pages Functions:
+```
+pnpm run dev:functions
+```
+
+Then open **http://localhost:8788/admin** to use the admin panel with full API support.
 *   **Build for Production:** `pnpm run build`
 *   **Preview Production Build:** `pnpm run preview`
 *   **Run Astro CLI Commands:** `pnpm run astro <command>` (e.g., `pnpm run astro check` for type-checking)

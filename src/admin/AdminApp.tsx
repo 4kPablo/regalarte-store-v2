@@ -588,7 +588,7 @@ function AdminShell({ user, database, onNotice }: { user: User; database: Firest
     setPublishing(true);
     try {
       await requestCatalogPublication(user);
-      onNotice({ kind: "success", message: "Publicación iniciada. El catálogo se actualizará cuando Cloudflare termine el nuevo build." });
+      onNotice({ kind: "success", message: "Publicación iniciada. El catálogo se actualizará en 1 o 2 minutos." });
     } catch (error) {
       onNotice({ kind: "error", message: messageFromError(error) });
     } finally {
