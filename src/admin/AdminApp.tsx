@@ -649,7 +649,7 @@ function AdminShell({ user, database, onNotice }: { user: User; database: Firest
           )}
         </main>
       </div>
-      <footer className={`fixed inset-x-0 z-30 border-t border-[#e5ded7] bg-white px-4 py-5 sm:hidden ${uncategorizedCount > 0 ? "bottom-20" : "bottom-0"}`}>
+      <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-[#e5ded7] bg-white px-4 py-5 sm:hidden">
         <nav className="mx-auto flex max-w-7xl flex-wrap justify-center gap-x-4 gap-y-2 text-sm font-bold" aria-label="Enlaces del dashboard">
           <a href="/" target="_blank" rel="noreferrer" className="text-[#9584a8] hover:underline">Ver catálogo ↗</a>
           <a href={supportUrl} target="_blank" rel="noreferrer" className="text-[#9584a8] hover:underline">Soporte</a>
@@ -657,7 +657,7 @@ function AdminShell({ user, database, onNotice }: { user: User; database: Firest
         </nav>
       </footer>
       {uncategorizedCount > 0 && (
-        <div role="alert" className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-xl rounded-2xl border border-amber-200 bg-amber-100 px-4 py-3 text-center text-sm font-semibold text-amber-950 shadow-xl sm:inset-x-auto sm:right-5 sm:text-left">
+        <div role="alert" className="fixed inset-x-3 bottom-20 z-40 mx-auto max-w-xl rounded-2xl border border-amber-200 bg-amber-100 px-4 py-3 text-center text-sm font-semibold text-amber-950 shadow-xl sm:inset-x-auto sm:right-5 sm:bottom-3 sm:text-left">
           Tenés {uncategorizedCount} {uncategorizedCount === 1 ? "producto sin categoría" : "productos sin categoría"}.
         </div>
       )}
