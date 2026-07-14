@@ -254,7 +254,7 @@ function ProductForm({
   onNotice: (notice: Notice) => void;
 }) {
   const [name, setName] = useState(current?.name ?? "");
-  const [categoryId, setCategoryId] = useState(current?.categoryId ?? categories[0]?.id ?? "");
+  const [categoryId, setCategoryId] = useState(current?.categoryId ?? "");
   const [featured, setFeatured] = useState(current?.featured ?? false);
   const [inStock, setInStock] = useState(current?.inStock ?? true);
   const [overridePrice, setOverridePrice] = useState(current?.overridePrice?.toString() ?? "");
@@ -623,8 +623,8 @@ function AdminShell({ user, database, onNotice }: { user: User; database: Firest
           </button>
         </div>
       </header>
-      <div className="mx-auto grid w-full max-w-7xl flex-1 content-start items-start gap-6 px-4 py-5 sm:px-6 lg:grid-cols-[210px_1fr] lg:content-stretch lg:py-8">
-        <nav className="flex self-start gap-2 overflow-x-auto lg:flex-col" aria-label="Secciones">
+      <div className={`mx-auto grid w-full max-w-7xl flex-1 content-start items-start gap-6 px-4 pt-5 sm:px-6 lg:grid-cols-[210px_1fr] lg:content-stretch lg:py-8 ${uncategorizedCount > 0 ? "pb-32" : "pb-24"}`}>
+        <nav className="flex self-start gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-col" aria-label="Secciones">
           {([
             ["products", "Productos"],
             ["categories", "Categorías y precios"],
@@ -649,7 +649,7 @@ function AdminShell({ user, database, onNotice }: { user: User; database: Firest
           )}
         </main>
       </div>
-      <footer className={`mt-auto border-t border-[#e5ded7] bg-white px-4 py-5 sm:hidden ${uncategorizedCount > 0 ? "pb-28" : "pb-5"}`}>
+      <footer className={`fixed inset-x-0 z-30 border-t border-[#e5ded7] bg-white px-4 py-5 sm:hidden ${uncategorizedCount > 0 ? "bottom-20" : "bottom-0"}`}>
         <nav className="mx-auto flex max-w-7xl flex-wrap justify-center gap-x-4 gap-y-2 text-sm font-bold" aria-label="Enlaces del dashboard">
           <a href="/" target="_blank" rel="noreferrer" className="text-[#9584a8] hover:underline">Ver catálogo ↗</a>
           <a href={supportUrl} target="_blank" rel="noreferrer" className="text-[#9584a8] hover:underline">Soporte</a>
