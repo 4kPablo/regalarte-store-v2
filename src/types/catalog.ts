@@ -17,7 +17,7 @@ export type Category = {
 export type ProductRecord = {
   id: string;
   name: string;
-  categoryId: string;
+  categoryId?: string;
   featured: boolean;
   inStock: boolean;
   overridePrice?: number;
@@ -26,7 +26,7 @@ export type ProductRecord = {
 };
 
 export type Product = Omit<ProductRecord, "categoryId"> & {
-  category: Category;
+  category: Category | null;
 };
 
 export type SiteSettings = {

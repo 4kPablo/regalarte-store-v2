@@ -107,8 +107,10 @@ export async function loadHomeData(): Promise<PageData> {
       })
       .map((document): Product | null => {
         const data = document.data() as Omit<ProductRecord, "id">;
-        const category = categoryById.get(data.categoryId);
-        if (!category || !data.image?.url) return null;
+        const category = data.categoryId
+          ? categoryById.get(data.categoryId) ?? null
+          : null;
+        if (!data.image?.url) return null;
         return {
           id: document.id,
           name: String(data.name ?? ""),

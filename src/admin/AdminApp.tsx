@@ -41,6 +41,7 @@ const fallbackSettings: SiteSettings = {
   whatsappNumber: "",
   instagramHandle: "",
 };
+const supportUrl = "https://wa.me/5491122527773?text=Hola%2C%20necesito%20ayuda%20con%20mi%20cat%C3%A1logo";
 
 function messageFromError(error: unknown): string {
   if (error instanceof Error) {
@@ -192,14 +193,11 @@ function ProductsPanel({
   return (
     <section>
       <SectionHeading title="Productos" description={`${products.length} productos cargados`} action={
-        <button type="button" className={primaryButtonClass} onClick={() => setEditing("new")} disabled={categories.length === 0}>
+        <button type="button" className={primaryButtonClass} onClick={() => setEditing("new")}>
           + Agregar producto
         </button>
       } />
-      {categories.length === 0 && (
-        <EmptyState title="Primero creá una categoría" text="Cada producto necesita una categoría para definir su precio." />
-      )}
-      {categories.length > 0 && products.length === 0 && (
+      {products.length === 0 && (
         <EmptyState title="Todavía no hay productos" text="Agregá el primero con el botón de arriba." />
       )}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -210,7 +208,7 @@ function ProductsPanel({
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h3 className="line-clamp-2 font-bold leading-tight">{product.name}</h3>
-                  <p className="mt-1 text-xs text-[#2d2a2a]/55">{categoryNames.get(product.categoryId) ?? "Sin categoría"}</p>
+                  <p className="mt-1 text-xs text-[#2d2a2a]/55">{categoryNames.get(product.categoryId ?? "") ?? "Sin categoría"}</p>
                 </div>
                 <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-extrabold uppercase ${product.inStock ? "bg-emerald-100 text-emerald-800" : "bg-zinc-200 text-zinc-700"}`}>
                   {product.inStock ? "En stock" : "Agotado"}
@@ -283,6 +281,21 @@ function ProductForm({
       return;
     }
 
+    const regular = asOptionalNumber(overridePrice);
+    const sale = asOptionalNumber(saleOverridePrice);
+    if (!categoryId && regular === undefined) {
+      onNotice({ kind: "error", message: "Ingresá un precio habitual para un producto sin categoría." });
+      return;
+    }
+    if (overridePrice.trim() !== "" && regular === undefined) {
+      onNotice({ kind: "error", message: "El precio habitual no es válido." });
+      return;
+    }
+    if (saleOverridePrice.trim() !== "" && sale === undefined) {
+      onNotice({ kind: "error", message: "El precio de oferta no es válido." });
+      return;
+    }
+
     setSaving(true);
     let uploadedImage: CatalogImage | null = null;
     try {
@@ -291,11 +304,9 @@ function ProductForm({
       if (!image) throw new Error("Falta la foto del producto.");
 
       const reference = current ? doc(database, "products", current.id) : doc(collection(database, "products"));
-      const regular = asOptionalNumber(overridePrice);
-      const sale = asOptionalNumber(saleOverridePrice);
       const data = {
         name: name.trim(),
-        categoryId,
+        ...(categoryId ? { categoryId } : {}),
         featured,
         inStock,
         image,
@@ -345,7 +356,8 @@ function ProductForm({
                 <input className={inputClass} required maxLength={80} value={name} onChange={(event) => setName(event.target.value)} />
               </Field>
               <Field label="Categoría">
-                <select className={inputClass} required value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
+                <select className={inputClass} value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
+                  <option value="">Sin categoría</option>
                   {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
                 </select>
               </Field>
@@ -356,7 +368,7 @@ function ProductForm({
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Precio diferente (opcional)" hint="Dejalo vacío para usar el precio de la categoría.">
+            <Field label={categoryId ? "Precio diferente (opcional)" : "Precio habitual"} hint={categoryId ? "Dejalo vacío para usar el precio de la categoría." : "Es obligatorio cuando el producto no tiene categoría."}>
               <input className={inputClass} type="number" inputMode="decimal" min="0" step="0.01" value={overridePrice} onChange={(event) => setOverridePrice(event.target.value)} />
             </Field>
             <Field label="Precio de oferta (opcional)" hint="Solo se usa cuando las ofertas están activadas.">
@@ -583,6 +595,7 @@ function AdminShell({ user, database, onNotice }: { user: User; database: Firest
   }, [database]);
 
   const hasPendingChanges = meta.contentVersion > meta.lastPublishRequestedVersion;
+  const uncategorizedCount = products.filter((product) => !product.categoryId).length;
 
   async function publish() {
     setPublishing(true);
@@ -597,10 +610,10 @@ function AdminShell({ user, database, onNotice }: { user: User; database: Firest
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 border-b border-[#e5ded7] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#f3e5d4] text-xl">✨</div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="h-10 w-10 shrink-0 rounded-xl bg-[#f3e5d4] p-2 text-[#2d2a2a]"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
           <div className="min-w-0 flex-1"><h1 className="truncate font-extrabold">Regal@arte</h1><p className="hidden text-xs text-[#2d2a2a]/50 sm:block">Administración del catálogo</p></div>
           <div className={`hidden rounded-full px-3 py-1.5 text-xs font-extrabold sm:block ${hasPendingChanges ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-800"}`}>
             {hasPendingChanges ? "Cambios sin publicar" : "Sin cambios nuevos"}
@@ -608,11 +621,10 @@ function AdminShell({ user, database, onNotice }: { user: User; database: Firest
           <button type="button" className={primaryButtonClass} disabled={!hasPendingChanges || publishing} onClick={() => void publish()}>
             {publishing ? "Publicando…" : "Publicar catálogo"}
           </button>
-          <button type="button" className="rounded-xl px-2 py-2 text-sm font-bold text-[#2d2a2a]/60 hover:bg-[#f7f5f2]" onClick={() => void signOut(getFirebaseServices().auth)} title="Cerrar sesión">Salir</button>
         </div>
       </header>
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 lg:grid-cols-[210px_1fr] lg:py-8">
-        <nav className="flex gap-2 overflow-x-auto lg:flex-col" aria-label="Secciones">
+      <div className="mx-auto grid w-full max-w-7xl flex-1 content-start items-start gap-6 px-4 py-5 sm:px-6 lg:grid-cols-[210px_1fr] lg:content-stretch lg:py-8">
+        <nav className="flex self-start gap-2 overflow-x-auto lg:flex-col" aria-label="Secciones">
           {([
             ["products", "Productos"],
             ["categories", "Categorías y precios"],
@@ -620,7 +632,11 @@ function AdminShell({ user, database, onNotice }: { user: User; database: Firest
           ] as const).map(([id, label]) => (
             <button key={id} type="button" onClick={() => setSection(id)} className={`shrink-0 rounded-xl px-4 py-2.5 text-left text-sm font-bold transition ${section === id ? "bg-[#2d2a2a] text-white" : "bg-white text-[#2d2a2a]/70 hover:bg-[#faf8f7]"}`}>{label}</button>
           ))}
-          <a href="/" target="_blank" rel="noreferrer" className="shrink-0 rounded-xl px-4 py-2.5 text-sm font-bold text-[#9584a8] hover:bg-white">Ver catálogo ↗</a>
+          <div className="hidden border-t border-[#e5ded7] pt-3 lg:flex lg:flex-col lg:gap-1">
+            <a href="/" target="_blank" rel="noreferrer" className="rounded-xl px-4 py-2.5 text-sm font-bold text-[#9584a8] hover:bg-white">Ver catálogo ↗</a>
+            <a href={supportUrl} target="_blank" rel="noreferrer" className="rounded-xl px-4 py-2.5 text-sm font-bold text-[#9584a8] hover:bg-white">Soporte</a>
+            <button type="button" className="rounded-xl px-4 py-2.5 text-left text-sm font-bold text-[#2d2a2a]/60 hover:bg-white" onClick={() => void signOut(getFirebaseServices().auth)}>Cerrar sesión</button>
+          </div>
         </nav>
         <main>
           <div className={`mb-5 rounded-2xl px-4 py-3 text-sm sm:hidden ${hasPendingChanges ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-800"}`}><strong>{hasPendingChanges ? "Tenés cambios sin publicar." : "No hay cambios nuevos."}</strong></div>
@@ -633,6 +649,18 @@ function AdminShell({ user, database, onNotice }: { user: User; database: Firest
           )}
         </main>
       </div>
+      <footer className={`mt-auto border-t border-[#e5ded7] bg-white px-4 py-5 sm:hidden ${uncategorizedCount > 0 ? "pb-28" : "pb-5"}`}>
+        <nav className="mx-auto flex max-w-7xl flex-wrap justify-center gap-x-4 gap-y-2 text-sm font-bold" aria-label="Enlaces del dashboard">
+          <a href="/" target="_blank" rel="noreferrer" className="text-[#9584a8] hover:underline">Ver catálogo ↗</a>
+          <a href={supportUrl} target="_blank" rel="noreferrer" className="text-[#9584a8] hover:underline">Soporte</a>
+          <button type="button" className="text-[#2d2a2a]/60 hover:underline" onClick={() => void signOut(getFirebaseServices().auth)}>Cerrar sesión</button>
+        </nav>
+      </footer>
+      {uncategorizedCount > 0 && (
+        <div role="alert" className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-xl rounded-2xl border border-amber-200 bg-amber-100 px-4 py-3 text-center text-sm font-semibold text-amber-950 shadow-xl sm:inset-x-auto sm:right-5 sm:text-left">
+          Tenés {uncategorizedCount} {uncategorizedCount === 1 ? "producto sin categoría" : "productos sin categoría"}.
+        </div>
+      )}
     </div>
   );
 }

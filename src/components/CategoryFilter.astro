@@ -3,10 +3,17 @@ import type { Category } from "../types/catalog";
 
 interface Props {
   categories: Pick<Category, "id" | "name" | "slug">[];
+  hasUncategorized?: boolean;
 }
 
-const { categories } = Astro.props;
-const items = [{ id: "todas", name: "Todas", slug: "todas" }, ...categories];
+const { categories, hasUncategorized = false } = Astro.props;
+const items = [
+  { id: "todas", name: "Todas", slug: "todas" },
+  ...categories,
+  ...(hasUncategorized
+    ? [{ id: "sin-categoria", name: "Sin categoría", slug: "sin-categoria" }]
+    : []),
+];
 ---
 
 <nav

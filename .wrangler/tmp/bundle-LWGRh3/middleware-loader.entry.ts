@@ -3,12 +3,12 @@
 // export dynamically through wrangler, or we can potentially let users directly
 // add them as a sort of "plugin" system.
 
-import ENTRY, { __INTERNAL_WRANGLER_MIDDLEWARE__ } from "/home/pavlo/Proyectos/regalarte-store-v2/regalarte-store-main/.wrangler/tmp/bundle-AnZd9d/middleware-insertion-facade.js";
+import ENTRY, { __INTERNAL_WRANGLER_MIDDLEWARE__ } from "/home/pavlo/Proyectos/regalarte-store-v2/regalarte-store-main/.wrangler/tmp/bundle-LWGRh3/middleware-insertion-facade.js";
 import { __facade_invoke__, __facade_register__, Dispatcher } from "/home/pavlo/Proyectos/regalarte-store-v2/regalarte-store-main/node_modules/.pnpm/wrangler@4.110.0/node_modules/wrangler/templates/middleware/common.ts";
-import type { WorkerEntrypointConstructor } from "/home/pavlo/Proyectos/regalarte-store-v2/regalarte-store-main/.wrangler/tmp/bundle-AnZd9d/middleware-insertion-facade.js";
+import type { WorkerEntrypointConstructor } from "/home/pavlo/Proyectos/regalarte-store-v2/regalarte-store-main/.wrangler/tmp/bundle-LWGRh3/middleware-insertion-facade.js";
 
 // Preserve all the exports from the worker
-export * from "/home/pavlo/Proyectos/regalarte-store-v2/regalarte-store-main/.wrangler/tmp/bundle-AnZd9d/middleware-insertion-facade.js";
+export * from "/home/pavlo/Proyectos/regalarte-store-v2/regalarte-store-main/.wrangler/tmp/bundle-LWGRh3/middleware-insertion-facade.js";
 
 class __Facade_ScheduledController__ implements ScheduledController {
 	readonly #noRetry: ScheduledController["noRetry"];

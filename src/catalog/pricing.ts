@@ -8,14 +8,14 @@ function resolvePrice(
   product: Product,
   sale: boolean,
 ): { display: number; regular: number; isOnSale: boolean } {
-  const regular = product.overridePrice ?? product.category.basePrice;
+  const regular = product.overridePrice ?? product.category?.basePrice ?? 0;
   if (!sale) return { display: regular, regular, isOnSale: false };
 
   const display = [
     product.saleOverridePrice,
-    product.category.salePrice,
+    product.category?.salePrice,
     product.overridePrice,
-    product.category.basePrice,
+    product.category?.basePrice,
   ].find((value): value is number => typeof value === "number");
 
   return {
