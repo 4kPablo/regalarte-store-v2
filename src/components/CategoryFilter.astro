@@ -1,0 +1,103 @@
+---
+import type { Category } from "../types/catalog";
+
+interface Props {
+  categories: Pick<Category, "id" | "name" | "slug">[];
+}
+
+const { categories } = Astro.props;
+const items = [{ id: "todas", name: "Todas", slug: "todas" }, ...categories];
+---
+
+<nav
+  id="filter-bar"
+  class="flex gap-5 overflow-x-auto pb-1 scrollbar-hide lg:flex-wrap lg:justify-center lg:gap-x-7 lg:gap-y-3 lg:overflow-visible"
+  role="group"
+  aria-label="Filtrar por categoría"
+>
+  {
+    items.map((cat, i) => (
+      <button
+        data-filter={cat.slug}
+        class:list={[
+          "filter-btn shrink-0 pb-1.5 text-sm font-medium border-b-2 transition-all duration-300",
+          i === 0
+            ? "text-brand-ink border-brand-gold active"
+            : "text-brand-ink/55 border-transparent hover:text-brand-ink/75 hover:border-brand-mauve-light/50",
+        ]}
+        aria-current={i === 0 ? "true" : undefined}
+      >
+        {cat.name}
+      </button>
+    ))
+  }
+</nav>
+
+<style>
+  #filter-bar::-webkit-scrollbar {
+    display: none;
+  }
+  #filter-bar {
+    scrollbar-width: none;
+  }
+  .filter-btn:not(.active) {
+    opacity: 0.75;
+  }
+  .filter-btn:not(.active):hover {
+    opacity: 0.9;
+  }
+</style>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>(".filter-btn");
+  const cards = document.querySelectorAll<HTMLElement>(
+    "#catalog-grid [data-category]",
+  );
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const filter = btn.dataset.filter!;
+
+      buttons.forEach((b) => {
+        b.classList.remove(
+          "text-brand-ink",
+          "border-brand-gold",
+          "active",
+        );
+        b.classList.add("text-brand-ink/55", "border-transparent");
+        b.removeAttribute("aria-current");
+      });
+      btn.classList.add(
+        "text-brand-ink",
+        "border-brand-gold",
+        "active",
+      );
+      btn.classList.remove("text-brand-ink/55", "border-transparent");
+      btn.setAttribute("aria-current", "true");
+
+      cards.forEach((card) => {
+        const matches = filter === "todas" || card.dataset.category === filter;
+        if (matches) {
+          card.style.display = "";
+          card.removeAttribute("data-aos");
+          card.style.animation = "fadeIn 0.25s ease forwards";
+        } else {
+          card.style.display = "none";
+        }
+      });
+    });
+  });
+</script>
+
+<style is:global>
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+</style>

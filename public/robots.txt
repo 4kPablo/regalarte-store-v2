@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://regalarte-store.pages.dev/sitemap-index.xml

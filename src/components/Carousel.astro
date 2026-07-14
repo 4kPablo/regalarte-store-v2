@@ -1,0 +1,45 @@
+---
+import type { ProductWithPricing } from "../types/catalog";
+import ProductCard from "./ProductCard.astro";
+
+interface Props {
+  products: ProductWithPricing[];
+}
+const { products } = Astro.props;
+---
+
+<div class="relative">
+  <div
+    id="carousel"
+    class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible lg:snap-none lg:pb-0"
+    style="scroll-padding-left: 1rem; -webkit-overflow-scrolling: touch;"
+  >
+    <div class="shrink-0 w-2 md:hidden" aria-hidden="true"></div>
+    {
+      products.map((product) => (
+        <div class="shrink-0 w-44 snap-start lg:w-auto lg:min-w-0">
+          <ProductCard product={product} />
+        </div>
+      ))
+    }
+    <div class="shrink-0 w-2 md:hidden" aria-hidden="true"></div>
+  </div>
+  <!-- fade edges -->
+  <div
+    class="pointer-events-none absolute top-0 left-0 h-full w-6 bg-gradient-to-r from-brand-blush to-transparent lg:hidden"
+  >
+  </div>
+  <div
+    class="pointer-events-none absolute top-0 right-0 h-full w-6 bg-gradient-to-l from-brand-blush to-transparent lg:hidden"
+  >
+  </div>
+</div>
+
+<style>
+  #carousel::-webkit-scrollbar {
+    display: none;
+  }
+  #carousel {
+    scrollbar-width: none;
+  }
+</style>

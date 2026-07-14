@@ -1,0 +1,357 @@
+---
+
+---
+
+<div class="flex items-center gap-2 lg:gap-3 mb-5 lg:mb-8 lg:max-w-2xl lg:mx-auto">
+  <div class="flex-1 relative" role="search" aria-label="Buscar productos">
+    <div class="relative">
+      <svg
+        class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-ink/30 pointer-events-none"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="M21 21l-4.35-4.35"></path>
+      </svg>
+      <input
+        type="search"
+        id="search-input"
+        class="w-full px-10 py-2.5 bg-brand-pearl border border-brand-mauve-light/40 rounded-full text-sm text-brand-ink placeholder:text-brand-ink/30 outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all duration-300"
+        placeholder="Buscar productos..."
+        aria-label="Buscar por nombre o categoría"
+        autocomplete="off"
+      />
+      <button
+        id="search-clear"
+        class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-brand-ink/30 hover:text-brand-ink/60 hover:bg-brand-mauve-light/20 transition-colors rounded-full"
+        aria-label="Limpiar búsqueda"
+        type="button"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          class="w-4 h-4"
+        >
+          <path d="M18 6L6 18M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="relative shrink-0">
+    <button
+      id="sort-btn"
+      class="w-[42px] h-[42px] flex items-center justify-center bg-brand-pearl border border-brand-mauve-light/40 rounded-full text-brand-ink/40 hover:text-brand-ink/60 hover:border-brand-mauve-light/60 transition-all duration-200"
+      aria-label="Ordenar productos"
+      aria-expanded="false"
+      type="button"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="lucide lucide-arrow-down-up-icon lucide-arrow-down-up w-4 h-4"
+        ><path d="m3 16 4 4 4-4"></path><path d="M7 20V4"></path><path
+          d="m21 8-4-4-4 4"></path><path d="M17 4v16"></path></svg
+      >
+    </button>
+    <div
+      id="sort-dropdown"
+      class="hidden absolute right-0 top-full mt-1.5 w-48 bg-white border border-brand-mauve-light/30 rounded-xl shadow-lg z-40 overflow-hidden"
+      role="menu"
+      aria-label="Opciones de orden"
+    >
+      <button
+        data-sort="default"
+        class="sort-option w-full text-left px-4 py-2.5 text-sm text-brand-ink font-medium bg-brand-mauve-light/20 transition-colors"
+        role="menuitem">Destacados</button
+      >
+      <button
+        data-sort="price-asc"
+        class="sort-option w-full text-left px-4 py-2.5 text-sm text-brand-ink/70 hover:bg-brand-pearl transition-colors"
+        role="menuitem">Precio: menor a mayor</button
+      >
+      <button
+        data-sort="price-desc"
+        class="sort-option w-full text-left px-4 py-2.5 text-sm text-brand-ink/70 hover:bg-brand-pearl transition-colors"
+        role="menuitem">Precio: mayor a menor</button
+      >
+      <button
+        data-sort="name-asc"
+        class="sort-option w-full text-left px-4 py-2.5 text-sm text-brand-ink/70 hover:bg-brand-pearl transition-colors"
+        role="menuitem">Nombre: A-Z</button
+      >
+      <button
+        data-sort="name-desc"
+        class="sort-option w-full text-left px-4 py-2.5 text-sm text-brand-ink/70 hover:bg-brand-pearl transition-colors"
+        role="menuitem">Nombre: Z-A</button
+      >
+    </div>
+  </div>
+</div>
+
+<style>
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-decoration {
+    display: none;
+  }
+</style>
+
+<script>
+  const searchInput = document.getElementById(
+    "search-input",
+  ) as HTMLInputElement;
+  const clearBtn = document.getElementById("search-clear") as HTMLButtonElement;
+  const sortBtn = document.getElementById("sort-btn") as HTMLButtonElement;
+  const sortDropdown = document.getElementById("sort-dropdown") as HTMLElement;
+  const grid = document.getElementById("catalog-grid") as HTMLElement;
+  const loadMoreBtn = document.getElementById("load-more-btn");
+  const noResults = document.getElementById("search-no-results") as HTMLElement;
+  const noResultsText = document.getElementById("search-no-results-text") as HTMLElement;
+
+  const wrappers = document.querySelectorAll<HTMLElement>(".product-wrapper");
+  let originalWrappers: HTMLElement[] = [];
+  let currentQuery = "";
+  let currentSort = "default";
+
+  function debounce<T extends (...args: unknown[]) => void>(
+    fn: T,
+    ms: number,
+  ): T {
+    let timer: ReturnType<typeof setTimeout>;
+    return ((...args: unknown[]) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn(...args), ms);
+    }) as T;
+  }
+
+  function filterProducts(query: string) {
+    currentQuery = query;
+    const q = query.toLowerCase();
+    const activeFilter =
+      document.querySelector<HTMLButtonElement>(".filter-btn.active")?.dataset
+        .filter || "todas";
+
+    let visibleCount = 0;
+
+    wrappers.forEach((w) => {
+      const name = (w.dataset.search || "").toLowerCase();
+      const matchesSearch = name.includes(q);
+      const matchesCategory =
+        activeFilter === "todas" || w.dataset.category === activeFilter;
+
+      if (matchesSearch && matchesCategory) {
+        w.style.display = "block";
+        w.removeAttribute("data-aos");
+        w.style.animation = "fadeIn 0.25s ease forwards";
+        visibleCount++;
+      } else {
+        w.style.display = "none";
+      }
+    });
+
+    if (noResults && noResultsText) {
+      if (visibleCount === 0) {
+        noResultsText.textContent = "Sin resultados para \u201c" + query + "\u201d";
+        noResults.classList.remove("hidden");
+      } else {
+        noResults.classList.add("hidden");
+      }
+    }
+
+    if (loadMoreBtn) {
+      loadMoreBtn.style.display = "none";
+    }
+  }
+
+  function restoreState() {
+    currentQuery = "";
+    wrappers.forEach((w) => {
+      w.style.display = "";
+    });
+
+    if (noResults) {
+      noResults.classList.add("hidden");
+    }
+
+    const activeBtn =
+      document.querySelector<HTMLButtonElement>(".filter-btn.active");
+    if (activeBtn) {
+      activeBtn.click();
+    }
+
+    if (loadMoreBtn) {
+      const remaining = document.querySelectorAll<HTMLElement>(
+        ".product-wrapper.hidden-by-pagination",
+      ).length;
+      loadMoreBtn.style.display = remaining > 0 ? "" : "none";
+    }
+  }
+
+  function sortProducts(sortBy: string) {
+    currentSort = sortBy;
+    const list = Array.from(wrappers);
+
+    if (sortBy === "default") {
+      list.sort(
+        (a, b) => originalWrappers.indexOf(a) - originalWrappers.indexOf(b),
+      );
+    } else {
+      list.sort((a, b) => {
+        switch (sortBy) {
+          case "price-asc":
+            return (
+              parseFloat(a.dataset.price || "0") -
+              parseFloat(b.dataset.price || "0")
+            );
+          case "price-desc":
+            return (
+              parseFloat(b.dataset.price || "0") -
+              parseFloat(a.dataset.price || "0")
+            );
+          case "name-asc":
+            return (a.dataset.name || "").localeCompare(b.dataset.name || "");
+          case "name-desc":
+            return (b.dataset.name || "").localeCompare(a.dataset.name || "");
+          default:
+            return 0;
+        }
+      });
+    }
+
+    list.forEach((w) => grid.appendChild(w));
+
+    if (currentQuery) {
+      filterProducts(currentQuery);
+    } else {
+      const activeBtn =
+        document.querySelector<HTMLButtonElement>(".filter-btn.active");
+      if (activeBtn) {
+        activeBtn.click();
+      }
+    }
+  }
+
+  function updateSortOption(value: string) {
+    document
+      .querySelectorAll<HTMLButtonElement>(".sort-option")
+      .forEach((opt) => {
+        const isActive = opt.dataset.sort === value;
+        opt.className = isActive
+          ? "sort-option w-full text-left px-4 py-2.5 text-sm text-brand-ink font-medium bg-brand-mauve-light/20 transition-colors"
+          : "sort-option w-full text-left px-4 py-2.5 text-sm text-brand-ink/70 hover:bg-brand-pearl transition-colors";
+      });
+  }
+
+  function openDropdown() {
+    sortDropdown.classList.remove("hidden");
+    sortBtn.setAttribute("aria-expanded", "true");
+  }
+
+  function closeDropdown() {
+    sortDropdown.classList.add("hidden");
+    sortBtn.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleDropdown() {
+    if (sortDropdown.classList.contains("hidden")) {
+      openDropdown();
+    } else {
+      closeDropdown();
+    }
+  }
+
+  const handleInput = debounce(() => {
+    const query = searchInput.value.trim();
+    clearBtn.classList.toggle("hidden", !query);
+
+    if (query) {
+      filterProducts(query);
+    } else {
+      restoreState();
+    }
+  }, 300);
+
+  searchInput.addEventListener("input", handleInput);
+
+  clearBtn.addEventListener("click", () => {
+    searchInput.value = "";
+    clearBtn.classList.add("hidden");
+    restoreState();
+    searchInput.focus();
+  });
+
+  sortBtn.addEventListener("click", toggleDropdown);
+
+  sortBtn.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      openDropdown();
+      const first = sortDropdown.querySelector<HTMLButtonElement>(".sort-option");
+      first?.focus();
+    }
+  });
+
+  sortDropdown.addEventListener("keydown", (e) => {
+    const opts = Array.from(sortDropdown.querySelectorAll<HTMLButtonElement>(".sort-option"));
+    const current = opts.findIndex((o) => o === document.activeElement);
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        opts[(current + 1) % opts.length]?.focus();
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        opts[(current - 1 + opts.length) % opts.length]?.focus();
+        break;
+      case "Escape":
+        e.preventDefault();
+        closeDropdown();
+        sortBtn.focus();
+        break;
+    }
+  });
+
+  document.addEventListener("click", (e) => {
+    if (
+      !sortBtn.contains(e.target as Node) &&
+      !sortDropdown.contains(e.target as Node)
+    ) {
+      closeDropdown();
+    }
+  });
+
+  document
+    .querySelectorAll<HTMLButtonElement>(".sort-option")
+    .forEach((opt) => {
+      opt.addEventListener("click", () => {
+        const value = opt.dataset.sort || "default";
+        if (value !== currentSort) {
+          sortProducts(value);
+          updateSortOption(value);
+        }
+        closeDropdown();
+      });
+    });
+
+  document.querySelectorAll(".filter-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (currentQuery) {
+        setTimeout(() => filterProducts(currentQuery), 0);
+      }
+    });
+  });
+
+  originalWrappers = Array.from(wrappers);
+</script>

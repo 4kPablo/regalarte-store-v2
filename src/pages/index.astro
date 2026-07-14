@@ -1,0 +1,348 @@
+---
+import { Image } from "astro:assets";
+import Layout from "../layouts/Layout.astro";
+import Carousel from "../components/Carousel.astro";
+import CategoryFilter from "../components/CategoryFilter.astro";
+import SearchBar from "../components/SearchBar.astro";
+import ProductCard from "../components/ProductCard.astro";
+import { loadHomeData } from "../catalog/server";
+import { productImageUrl } from "../catalog/format";
+import logo from "../assets/logo.webp";
+
+const { products, categories, settings, isFirebaseConfigured, firebaseError } =
+  await loadHomeData();
+
+const featured = products.filter((p) => p.featured);
+const showSetupWarning = !isFirebaseConfigured || products.length === 0;
+---
+
+<Layout
+  title={`${settings.siteName} — Escarapelas Artesanales`}
+  tagline={settings.heroTagline}
+  whatsappNumber={settings.whatsappNumber}
+>
+  {
+    products.length > 0 && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          itemListElement: products.map((p, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            item: {
+              "@type": "Product",
+              name: p.name,
+              category: p.category.name,
+              image: productImageUrl(p.image, { width: 800, quality: 80 }),
+              offers: {
+                "@type": "Offer",
+                price: p.displayPrice,
+                priceCurrency: "ARS",
+                availability: p.inStock
+                  ? "https://schema.org/InStock"
+                  : "https://schema.org/OutOfStock",
+              },
+            },
+          })),
+        })}
+      />
+    )
+  }
+
+  {
+    settings.saleMode && (
+      <div
+        class="bg-brand-crema text-white text-center py-2 px-4 text-sm font-bold"
+        role="status"
+      >
+        ¡Descuentos! ✨ Precios especiales solo por hoy
+      </div>
+    )
+  }
+
+  {
+    !isFirebaseConfigured && (
+      <div class="bg-brand-ink text-white text-center py-3 px-4 text-xs">
+        <strong>El catálogo todavía no está configurado.</strong> Revisá las
+        variables privadas del build en Cloudflare Pages.
+      </div>
+    )
+  }
+
+  <!-- ===== HEADER ===== -->
+  <header
+    class="bg-brand-crema-light pt-12 pb-14 lg:pt-16 lg:pb-16 px-4 lg:px-8 text-center relative overflow-hidden"
+  >
+    <!-- Subtle warm gradient overlay -->
+    <div
+      class="absolute inset-0 bg-gradient-to-b from-brand-gold-light/50 via-transparent to-transparent pointer-events-none"
+    >
+    </div>
+    <!-- Delicate divider ribbon -->
+    <div
+      class="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-brand-gold-light/60 via-brand-gold to-brand-crema"
+    >
+    </div>
+
+    <div class="relative z-10 flex flex-col items-center gap-4 lg:gap-5">
+      <div
+        class="w-32 h-32 lg:w-36 lg:h-36 rounded-full overflow-hidden shadow-xl ring-[3px] ring-brand-gold/40 ring-offset-[3px] ring-offset-brand-crema-light"
+        data-aos="fade-down"
+      >
+        <Image
+          src={logo}
+          alt={`Logo ${settings.siteName}`}
+          class="w-full h-full object-cover"
+          loading="eager"
+        />
+      </div>
+
+      <div data-aos="fade-down" data-aos-delay="50">
+        <h1
+          class="font-script text-6xl lg:text-7xl text-brand-ink drop-shadow-sm leading-tight"
+        >
+          {settings.siteName}
+        </h1>
+      </div>
+
+      <p
+        class="text-brand-ink/60 text-sm lg:text-base font-medium bg-brand-pearl/70 rounded-full px-5 py-1.5 border border-brand-crema-light/30 shadow-sm"
+        data-aos="fade-down"
+        data-aos-delay="100"
+      >
+        {settings.heroTagline}
+      </p>
+    </div>
+  </header>
+
+  <main id="main-content" class="px-4 lg:px-8 pb-10 lg:pb-16">
+    {
+      featured.length > 0 && (
+        <section class="mt-10 lg:mt-14 mb-12 lg:mb-16" aria-labelledby="destacados-titulo">
+          <div class="flex flex-col items-center gap-2 mb-5">
+            <div class="flex items-center gap-3 w-full">
+              <div class="h-px flex-1 bg-gradient-to-r from-transparent via-brand-gold-light/60 to-transparent" />
+              <span class="text-brand-gold text-xs" aria-hidden="true">
+                ✦
+              </span>
+              <div class="h-px flex-1 bg-gradient-to-r from-transparent via-brand-gold-light/60 to-transparent" />
+            </div>
+            <h2
+              id="destacados-titulo"
+              class="font-serif font-bold text-xl lg:text-2xl text-brand-ink tracking-tight text-center"
+            >
+              <span
+                class="font-script text-brand-gold text-lg font-normal"
+                aria-hidden="true"
+              >
+                ✦
+              </span>{" "}
+              Destacados{" "}
+              <span
+                class="font-script text-brand-gold text-lg font-normal"
+                aria-hidden="true"
+              >
+                ✦
+              </span>
+            </h2>
+          </div>
+          <Carousel products={featured} />
+        </section>
+      )
+    }
+
+    <section aria-labelledby="catalogo-titulo" class="mt-2">
+      <div class="flex flex-col items-center gap-2 mb-5">
+        <div class="flex items-center gap-3 w-full">
+          <div
+            class="h-px flex-1 bg-gradient-to-r from-transparent via-brand-gold-light/60 to-transparent"
+          >
+          </div>
+          <span class="text-brand-gold text-xs" aria-hidden="true">✦</span>
+          <div
+            class="h-px flex-1 bg-gradient-to-r from-transparent via-brand-gold-light/60 to-transparent"
+          >
+          </div>
+        </div>
+        <h2
+          id="catalogo-titulo"
+          class="font-serif font-bold text-xl lg:text-2xl text-brand-ink tracking-tight text-center"
+        >
+          <span
+            class="font-script text-brand-gold text-lg font-normal"
+            aria-hidden="true">✦</span
+          >
+          {" "}Catálogo{" "}
+          <span
+            class="font-script text-brand-gold text-lg font-normal"
+            aria-hidden="true">✦</span
+          >
+        </h2>
+      </div>
+
+      {
+        categories.length > 0 && (
+          <div class="mb-5 lg:mb-7">
+            <CategoryFilter categories={categories} />
+          </div>
+        )
+      }
+
+      <SearchBar />
+
+      {
+        showSetupWarning ? (
+          <div class="bg-brand-pearl border-2 border-dashed border-brand-mauve-light rounded-2xl p-6 text-center">
+            <p class="text-3xl mb-2">✨</p>
+            <p class="font-bold text-brand-ink mb-1">
+              Todavía no hay productos cargados
+            </p>
+            {isFirebaseConfigured ? (
+              <p class="text-sm text-brand-ink/60">
+                Andá a{" "}
+                <a href="/admin" class="text-brand-crema underline font-bold">
+                  /admin
+                </a>{" "}
+                para agregar.
+              </p>
+            ) : (
+              <p class="text-sm text-brand-ink/60 mt-2">{firebaseError}</p>
+            )}
+          </div>
+        ) : (
+          <>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6" id="catalog-grid">
+              {products.map((product, index) => (
+                <div
+                  class:list={[
+                    "product-wrapper",
+                    { "hidden-by-pagination": index >= 12 },
+                  ]}
+                  data-category={product.category.slug}
+                  data-search={`${product.name.toLowerCase()} ${product.category.name.toLowerCase()}`}
+                  data-price={product.displayPrice}
+                  data-name={product.name.toLowerCase()}
+                >
+                  <ProductCard product={product} delay={index * 50} />
+                </div>
+              ))}
+            </div>
+            {products.length > 12 && (
+              <div id="load-more-container" class="flex justify-center mt-6">
+                <button
+                  id="load-more-btn"
+                  class="px-8 py-2.5 rounded-full bg-brand-mauve-light/40 text-brand-mauve-dark font-medium text-sm hover:bg-brand-mauve-light/60 transition-colors active:scale-95"
+                >
+                  Cargar más
+                </button>
+              </div>
+            )}
+            <div
+              id="search-no-results"
+              class="hidden rounded-2xl p-6 text-center"
+              role="status"
+            >
+              <div class="text-3xl mb-2 justify-center flex">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-search-alert-icon lucide-search-alert"
+                >
+                  <>
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                    <path d="M11 7v4" />
+                    <path d="M11 15h.01" />
+                  </>
+                </svg>
+              </div>
+              <p class="font-bold text-brand-ink mb-1">
+                No se encontraron productos
+              </p>
+              <p
+                id="search-no-results-text"
+                class="text-sm text-brand-ink/60"
+              />
+            </div>
+          </>
+        )
+      }
+    </section>
+  </main>
+
+  <!-- Footer divider -->
+  <div
+    class="h-[2px] bg-gradient-to-r from-brand-gold-light/60 via-brand-gold to-brand-crema"
+    aria-hidden="true"
+  >
+  </div>
+
+  <footer
+    class="bg-brand-crema-light text-center py-10 lg:py-12 px-4 lg:px-8 relative overflow-hidden"
+  >
+    <div
+      class="absolute inset-0 bg-gradient-to-t from-brand-gold-light/10 via-transparent to-transparent pointer-events-none"
+    >
+    </div>
+    <div class="flex flex-col items-center gap-2">
+      <p class="font-script text-3xl text-brand-ink drop-shadow-sm">
+        {settings.siteName}
+      </p>
+      <p class="text-brand-ink/60 text-sm font-medium">
+        Hecho con 💖 por Alicia
+      </p>
+      <p class="text-brand-ink/40 text-xs tracking-widest">
+        <span>✦</span>
+        <a
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-brand-crema transition-colors mx-1">by Pablolabs</a
+        >
+        <span>✦</span>
+      </p>
+    </div>
+  </footer>
+</Layout>
+
+<style>
+  .product-wrapper.hidden-by-pagination {
+    display: none;
+  }
+</style>
+
+<script>
+  const loadMoreBtn = document.getElementById("load-more-btn");
+  if (loadMoreBtn) {
+    const wrappers = document.querySelectorAll<HTMLElement>(".product-wrapper");
+    let shown = 12;
+    loadMoreBtn.addEventListener("click", () => {
+      const next = shown + 12;
+      const activeFilter =
+        document.querySelector<HTMLButtonElement>(".filter-btn.active")?.dataset
+          .filter || "todas";
+      wrappers.forEach((w, i) => {
+        if (i >= shown && i < next) {
+          w.classList.remove("hidden-by-pagination");
+          if (activeFilter !== "todas" && w.dataset.category !== activeFilter) {
+            w.style.display = "none";
+          }
+        }
+      });
+      shown = next;
+      if (shown >= wrappers.length) {
+        loadMoreBtn.style.display = "none";
+      }
+    });
+  }
+</script>

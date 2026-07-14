@@ -1,0 +1,46 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Página no encontrada — Regal@arte">
+  <main class="px-4 min-h-[70vh] flex flex-col items-center justify-center text-center relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-b from-brand-gold-light/10 via-transparent to-transparent pointer-events-none" />
+    <div class="relative z-10 flex flex-col items-center gap-6">
+      <div class="flex items-center gap-4 w-full max-w-[200px]">
+        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-brand-gold-light/60 to-transparent" />
+        <span class="text-brand-gold text-xs" aria-hidden="true">✦</span>
+        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-brand-gold-light/60 to-transparent" />
+      </div>
+
+      <p class="font-script text-[8rem] leading-none text-brand-gold drop-shadow-sm select-none" aria-hidden="true">
+        404
+      </p>
+
+      <div class="flex items-center gap-4 w-full max-w-[200px]">
+        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-brand-gold-light/60 to-transparent" />
+        <span class="text-brand-gold text-xs" aria-hidden="true">✦</span>
+        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-brand-gold-light/60 to-transparent" />
+      </div>
+
+      <div class="space-y-2">
+        <h1 class="font-serif font-bold text-2xl text-brand-ink">
+          Página no encontrada
+        </h1>
+        <p class="text-brand-ink/50 text-sm max-w-xs mx-auto">
+          La página que buscás no existe o fue movida.
+        </p>
+      </div>
+
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 px-8 py-2.5 rounded-full bg-brand-mauve-light/40 text-brand-mauve-dark font-medium text-sm hover:bg-brand-mauve-light/60 transition-colors active:scale-95 mt-2"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+        Volver al inicio
+      </a>
+    </div>
+  </main>
+</Layout>

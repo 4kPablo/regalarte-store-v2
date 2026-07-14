@@ -1,0 +1,551 @@
+---
+interface Props {
+  whatsappNumber?: string;
+}
+const { whatsappNumber } = Astro.props;
+---
+
+<dialog id="product-modal" class="product-modal" data-whatsapp-number={whatsappNumber ?? ""}>
+  <div class="modal-card">
+    <button id="modal-close" class="modal-close" aria-label="Cerrar">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="w-5 h-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <line x1="18" y1="6" x2="6" y2="18"></line><line
+          x1="6"
+          y1="6"
+          x2="18"
+          y2="18"></line>
+      </svg>
+    </button>
+
+    <div class="modal-media relative overflow-hidden aspect-square">
+      <img
+        id="modal-img"
+        class="modal-img"
+        alt=""
+        width="1000"
+        height="1000"
+      />
+      <span id="modal-category" class="modal-category-badge"></span>
+      <span
+        id="modal-badges"
+        class="absolute top-3 right-3 flex flex-col gap-1 items-end z-10"
+      ></span>
+    </div>
+
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title" class="modal-title"></h2>
+        <div class="modal-prices">
+          <span id="modal-regular-price" class="modal-regular-price hidden"
+          ></span>
+          <p id="modal-price" class="modal-price"></p>
+        </div>
+      </div>
+
+      <p id="modal-description" class="modal-description"></p>
+
+      <div class="modal-stock">
+        <span class="modal-stock-label">DISPONIBILIDAD:</span>
+        <span id="modal-stock-status" class="modal-stock-status"></span>
+      </div>
+
+      <a
+        id="modal-whatsapp-btn"
+        class="modal-whatsapp-btn"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+          <path
+            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"
+          ></path>
+        </svg>
+        Consultar por WhatsApp
+      </a>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.getElementById(
+    "product-modal",
+  ) as HTMLDialogElement;
+  const modalCard = document.querySelector(".modal-card") as HTMLElement;
+  const modalClose = document.getElementById(
+    "modal-close",
+  ) as HTMLButtonElement;
+  const modalImg = document.getElementById("modal-img") as HTMLImageElement;
+  const modalTitle = document.getElementById(
+    "modal-title",
+  ) as HTMLHeadingElement;
+  const modalPrice = document.getElementById(
+    "modal-price",
+  ) as HTMLParagraphElement;
+  const modalRegularPrice = document.getElementById(
+    "modal-regular-price",
+  ) as HTMLSpanElement;
+  const modalCategory = document.getElementById(
+    "modal-category",
+  ) as HTMLSpanElement;
+  const modalBadges = document.getElementById(
+    "modal-badges",
+  ) as HTMLSpanElement;
+  const modalDescription = document.getElementById(
+    "modal-description",
+  ) as HTMLParagraphElement;
+  const modalStockStatus = document.getElementById(
+    "modal-stock-status",
+  ) as HTMLSpanElement;
+  const modalWhatsapp = document.getElementById(
+    "modal-whatsapp-btn",
+  ) as HTMLAnchorElement;
+
+  const currentWhatsappNumber = dialog.dataset.whatsappNumber ?? "";
+  let lastTriggerCard: HTMLElement | null = null;
+
+  const isFirefox = navigator.userAgent.includes("Firefox");
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+  const skipAllAnimations = isFirefox || prefersReducedMotion;
+
+  function formatPrice(value: number) {
+    return `$${value.toLocaleString("es-AR")}`;
+  }
+
+  function openProductModal(card: HTMLElement) {
+    lastTriggerCard = card;
+    const name = card.dataset.productName!;
+    const price = parseInt(card.dataset.productPrice!);
+    const regularPrice = parseInt(card.dataset.productRegularPrice || "0");
+    const imageUrl =
+      card.dataset.productImage || card.dataset.productImageHd || "";
+    const category = card.dataset.productCategory!;
+    const onSale = card.dataset.productOnSale === "true";
+    const inStock = card.dataset.productInStock !== "false";
+    const isSaleMode = card.dataset.productSaleMode === "true";
+
+    modalTitle.textContent = name;
+    modalPrice.textContent = formatPrice(price);
+    modalCategory.textContent = category;
+    modalImg.src = imageUrl;
+    modalImg.alt = name;
+
+    if (onSale && regularPrice > price) {
+      modalRegularPrice.textContent = formatPrice(regularPrice);
+      modalRegularPrice.classList.remove("hidden");
+    } else {
+      modalRegularPrice.classList.add("hidden");
+    }
+
+    const cleanNumber = currentWhatsappNumber.replace(/\D/g, "");
+    if (cleanNumber) {
+      const message = encodeURIComponent(`Hola! Me interesa la ${name}`);
+      modalWhatsapp.href = `https://wa.me/${cleanNumber}?text=${message}`;
+      modalWhatsapp.style.display = "";
+    } else {
+      modalWhatsapp.href = "#";
+      modalWhatsapp.style.display = "none";
+    }
+
+    if (inStock) {
+      modalStockStatus.textContent = "EN STOCK";
+      modalStockStatus.className = "modal-stock-status in-stock";
+    } else {
+      modalStockStatus.textContent = "AGOTADO";
+      modalStockStatus.className = "modal-stock-status out-of-stock";
+    }
+
+    modalBadges.innerHTML = "";
+    if (isSaleMode) {
+      const b = document.createElement("span");
+      b.className =
+        "bg-brand-gold text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm";
+      b.textContent = "OFERTA";
+      modalBadges.appendChild(b);
+    }
+    if (!inStock) {
+      const b = document.createElement("span");
+      b.className =
+        "bg-brand-ink/80 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider";
+      b.textContent = "AGOTADO";
+      modalBadges.appendChild(b);
+    }
+
+    const desc =
+      card.dataset.productDescription ||
+      "Escarapela artesanal hecha a mano con materiales de primera calidad. Cada pieza es única, reflejando el compromiso con la tradición y la elegancia artesanal.";
+    modalDescription.textContent = desc;
+
+    if (
+      !skipAllAnimations &&
+      !isMobile &&
+      "startViewTransition" in document
+    ) {
+      const tid = `pc-${Date.now()}`;
+      card.style.viewTransitionName = tid;
+      document.startViewTransition(() => {
+        card.style.viewTransitionName = "";
+        modalCard.style.viewTransitionName = tid;
+        dialog.showModal();
+      });
+    } else if (!skipAllAnimations) {
+      dialog.showModal();
+      modalCard.style.animation = "modalCardIn 0.25s ease";
+      modalCard.addEventListener(
+        "animationend",
+        () => {
+          modalCard.style.animation = "";
+        },
+        { once: true },
+      );
+    } else {
+      dialog.showModal();
+    }
+  }
+
+  document.addEventListener("click", (e) => {
+    const card = (e.target as HTMLElement).closest<HTMLElement>(
+      "[data-product-id]",
+    );
+    if (card) openProductModal(card);
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      const card = (e.target as HTMLElement).closest<HTMLElement>(
+        "[data-product-id]",
+      );
+      if (card) {
+        e.preventDefault();
+        openProductModal(card);
+      }
+    }
+  });
+
+  function closeModal() {
+    if (skipAllAnimations) {
+      dialog.close();
+      return;
+    }
+    if (dialog.classList.contains("closing")) return;
+    dialog.classList.add("closing");
+    dialog.addEventListener(
+      "animationend",
+      () => {
+        dialog.classList.remove("closing");
+        dialog.close();
+      },
+      { once: true },
+    );
+  }
+
+  modalClose.addEventListener("click", closeModal);
+
+  dialog.addEventListener("click", (e) => {
+    if (e.target === dialog) closeModal();
+  });
+
+  dialog.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    closeModal();
+  });
+
+  dialog.addEventListener("close", () => {
+    modalCard.style.viewTransitionName = "";
+    document.querySelectorAll("[data-product-id]").forEach((el) => {
+      (el as HTMLElement).style.viewTransitionName = "";
+    });
+    if (lastTriggerCard) {
+      lastTriggerCard.focus({ preventScroll: true });
+      lastTriggerCard = null;
+    }
+  });
+</script>
+
+<style is:global>
+  /* ===== Modal Base ===== */
+  .product-modal {
+    border: none;
+    background: transparent;
+    padding: 1rem;
+    max-width: min(calc(100vw - 2rem), 500px);
+    max-height: 90vh;
+    width: auto;
+    height: auto;
+    overflow: visible;
+  }
+  .product-modal::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  /* ===== Modal Card ===== */
+  .modal-card {
+    background: white;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    max-height: calc(100vh - 2rem);
+  }
+
+  /* ===== Close Button ===== */
+  .modal-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 20;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: rgba(253, 245, 244, 0.85);
+    color: #2d2a2a;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .modal-close:hover {
+    background: #fdf5f4;
+    transform: scale(1.05);
+  }
+  .modal-close:active {
+    transform: scale(0.92);
+  }
+
+  /* ===== Image ===== */
+  .modal-img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+
+  /* ===== Category Badge on Image ===== */
+  .modal-category-badge {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    color: #9584a8;
+    font-family: Outfit, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.375rem 0.875rem;
+    border-radius: 9999px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(212, 201, 224, 0.4);
+  }
+
+  /* ===== Content Area ===== */
+  .modal-content {
+    padding: 1.5rem 1.5rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow-y: auto;
+  }
+
+  /* ===== Header (Title + Price) ===== */
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .modal-title {
+    font-family:
+      Playfair Display,
+      serif;
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: #2d2a2a;
+    line-height: 1.25;
+    flex: 1;
+  }
+  .modal-prices {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+  .modal-price {
+    font-family: Outfit, sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #9584a8;
+    line-height: 1;
+  }
+  .modal-regular-price {
+    font-family: Outfit, sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgba(45, 42, 42, 0.4);
+    text-decoration: line-through;
+    line-height: 1;
+  }
+
+  /* ===== Description ===== */
+  .modal-description {
+    font-family: Outfit, sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: rgba(45, 42, 42, 0.65);
+    margin: 0;
+  }
+
+  /* ===== Stock Status ===== */
+  .modal-stock {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin: 0;
+  }
+  .modal-stock-label {
+    font-family: Outfit, sans-serif;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: rgba(45, 42, 42, 0.5);
+  }
+  .modal-stock-status {
+    font-family: Outfit, sans-serif;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .modal-stock-status.in-stock {
+    color: #9584a8;
+  }
+  .modal-stock-status.out-of-stock {
+    color: #ba1a1a;
+  }
+
+  /* ===== WhatsApp Button ===== */
+  .modal-whatsapp-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    border-radius: 9999px;
+    font-family: Outfit, sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    background: #b8a9c9;
+    color: white;
+    box-shadow: 0 4px 16px rgba(184, 169, 201, 0.35);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    margin-top: 0.125rem;
+  }
+  .modal-whatsapp-btn:hover {
+    background: #9584a8;
+    box-shadow: 0 6px 20px rgba(184, 169, 201, 0.45);
+    transform: translateY(-1px);
+  }
+  .modal-whatsapp-btn:active {
+    transform: scale(0.97);
+  }
+
+  @media (min-width: 1024px) {
+    .product-modal {
+      width: min(calc(100vw - 4rem), 960px);
+      max-width: 960px;
+      max-height: calc(100vh - 4rem);
+      padding: 0;
+    }
+    .modal-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      max-height: calc(100vh - 4rem);
+    }
+    .modal-media {
+      aspect-ratio: auto;
+      min-height: min(560px, calc(100vh - 4rem));
+    }
+    .modal-content {
+      justify-content: center;
+      padding: 2.5rem;
+      gap: 1rem;
+    }
+    .modal-title {
+      font-size: 1.75rem;
+    }
+    .modal-close {
+      background: rgba(255, 255, 255, 0.92);
+    }
+  }
+
+  @media (max-height: 640px) {
+    .product-modal {
+      max-height: calc(100vh - 1rem);
+      padding: 0.5rem;
+    }
+    .modal-card {
+      max-height: calc(100vh - 1rem);
+    }
+    .modal-content {
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
+  }
+
+  /* ===== Animations ===== */
+  .product-modal.closing {
+    animation: modalFadeOut 0.3s ease-out forwards;
+    pointer-events: none;
+  }
+  .product-modal.closing::backdrop {
+    animation: backdropFadeOut 0.3s ease-out forwards;
+  }
+  @keyframes modalFadeOut {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  }
+  @keyframes backdropFadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes modalCardIn {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+</style>

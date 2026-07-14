@@ -1,0 +1,118 @@
+---
+import logo from "../assets/logo.webp";
+import "aos/dist/aos.css";
+import WhatsAppButton from "../components/WhatsAppButton.astro";
+import ProductModal from "../components/ProductModal.astro";
+
+interface Props {
+  title?: string;
+  tagline?: string;
+  whatsappNumber?: string;
+}
+const {
+  title = "Regal@arte — Escarapelas Artesanales",
+  tagline = "Escarapelas artesanales hechas con amor",
+  whatsappNumber,
+} = Astro.props;
+
+const siteName = title.split(" — ")[0];
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site).href;
+---
+
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={tagline} />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={tagline} />
+    <meta property="og:image" content={new URL(logo.src, Astro.site).href} />
+    <meta property="og:image:alt" content={`Logo de ${siteName}`} />
+    <meta property="og:url" content={canonicalUrl} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={tagline} />
+    <meta name="twitter:image" content={new URL(logo.src, Astro.site).href} />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script is:inline type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": siteName,
+      "description": tagline,
+      "url": Astro.site?.href,
+      "logo": new URL(logo.src, Astro.site).href,
+    })}></script>
+
+    <script is:inline type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": siteName,
+      "description": tagline,
+      "url": Astro.site?.href,
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": `${Astro.site?.href}?q={search_term_string}`
+        },
+        "query-input": "required name=search_term_string"
+      }
+    })}></script>
+  </head>
+  <body class="bg-brand-blush font-rounded text-brand-ink min-h-screen">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-white focus:text-brand-ink focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-gold"
+    >
+      Saltar al contenido principal
+    </a>
+
+    <div class="max-w-lg md:max-w-2xl lg:max-w-6xl mx-auto">
+      <slot />
+    </div>
+
+    <WhatsAppButton whatsappNumber={whatsappNumber} />
+    <ProductModal whatsappNumber={whatsappNumber} />
+  </body>
+  <script>
+    import AOS from "aos";
+    AOS.init({
+      duration: 600,
+      once: true,
+      offset: 100,
+      easing: "ease-out-cubic",
+      disableMutationObserver: true,
+    });
+  </script>
+</html>
+
+<style is:global>
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    -webkit-font-smoothing: antialiased;
+  }
+</style>

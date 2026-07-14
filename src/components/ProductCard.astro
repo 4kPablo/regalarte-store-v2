@@ -1,0 +1,79 @@
+---
+import { Image } from "astro:assets";
+import type { ProductWithPricing } from "../types/catalog";
+import { formatARS } from "../catalog/pricing";
+import { productImageUrl } from "../catalog/format";
+
+interface Props {
+  product: ProductWithPricing;
+  delay?: number;
+}
+
+const { product, delay = 0 } = Astro.props;
+
+const thumbUrl = productImageUrl(product.image, { width: 600, quality: 80 });
+const hdUrl = productImageUrl(product.image, { width: 1200, quality: 85 });
+---
+
+<button
+  type="button"
+  class="product-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col cursor-pointer relative group hover:-translate-y-1.5 ring-1 ring-brand-crema-light/15 hover:ring-brand-crema-light/30 text-left"
+  data-aos="fade-up"
+  data-aos-delay={delay}
+  data-category={product.category.slug}
+  data-product-id={product.id}
+  data-product-name={product.name}
+  data-product-image={thumbUrl}
+  data-product-image-hd={hdUrl}
+  data-product-category={product.category.name}
+  data-product-price={product.displayPrice}
+  data-product-regular-price={product.regularPrice}
+  data-product-on-sale={product.isOnSale}
+  data-product-in-stock={product.inStock}
+  data-product-sale-mode={product.isSaleMode}
+  data-product-description=""
+>
+  <!-- Ribbon accent -->
+  <div class="h-[3px] bg-gradient-to-r from-brand-gold-light/60 via-brand-gold to-brand-crema shrink-0"></div>
+
+  {
+    !product.inStock && (
+      <span class="absolute top-3 right-3 z-10 bg-brand-ink/80 text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
+        Agotado
+      </span>
+    )
+  }
+
+  <div class="relative overflow-hidden aspect-square">
+    <Image
+      src={thumbUrl}
+      alt={product.name}
+      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+      loading="lazy"
+      width={600}
+      height={600}
+    />
+    <span
+      class="absolute bottom-2 left-2 bg-white/80 backdrop-blur-sm text-brand-mauve-dark text-xs font-rounded font-semibold px-2.5 py-1 rounded-sm shadow-sm"
+    >
+      {product.category.name}
+    </span>
+  </div>
+  <div class="p-3 flex flex-col gap-1 flex-1">
+    <h3 class="font-semibold text-sm leading-tight text-brand-ink line-clamp-2">
+      {product.name}
+    </h3>
+    <div class="mt-auto flex items-baseline gap-2 flex-wrap">
+      <p class="text-brand-mauve-dark font-bold text-base">
+        ${formatARS(product.displayPrice)}
+      </p>
+      {
+        product.isOnSale && (
+          <span class="text-brand-ink/35 text-xs line-through font-medium">
+            ${formatARS(product.regularPrice)}
+          </span>
+        )
+      }
+    </div>
+  </div>
+</button>
